@@ -11,7 +11,7 @@ import torch
 import xml.etree.ElementTree as ET
 
 
-from aerial_gym import AERIAL_GYM_ROOT_DIR, AERIAL_GYM_ROOT_DIR
+from aerial_gym import AERIAL_GYM_ROOT_DIR
 
 from isaacgym import gymutil, gymtorch, gymapi
 from isaacgym.torch_utils import *
