@@ -6,9 +6,9 @@
 
 import torch
 
-from aerial_gym.envs.controllers.attitude_control import LeeAttitudeContoller
-from aerial_gym.envs.controllers.position_control import LeePositionController
-from aerial_gym.envs.controllers.velocity_control import LeeVelocityController
+from aerial_gym.controllers.attitude_control import LeeAttitudeContoller
+from aerial_gym.controllers.position_control import LeePositionController
+from aerial_gym.controllers.velocity_control import LeeVelocityController
 
 
 control_class_dict = {
