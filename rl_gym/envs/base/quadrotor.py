@@ -288,7 +288,6 @@ def compute_quadcopter_reward(root_positions, root_quats, root_linvels, root_ang
     die = torch.where(target_dist > 15.0, ones, die)
     hard_reset = torch.zeros_like(reset_buf)
 
-    # z >= 0.5 & z <= 5.0 & up > 0
     die = torch.where(root_positions[..., 2] < 0.2, ones, die)
     reset = torch.where(progress_buf >= max_episode_length - 1, ones, die)
 
