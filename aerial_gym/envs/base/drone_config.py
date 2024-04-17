@@ -1,4 +1,4 @@
-# Copyright (c) 2023, Autonomous Robots Lab, Norwegian University of Science and Technology
+# Copyright (c) 2024, Regelungs- und Automatisierungstechnik (RAT) - Paderborn University
 # All rights reserved.
 
 # This source code is licensed under the BSD-style license found in the
