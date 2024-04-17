@@ -11,22 +11,22 @@ import torch
 import xml.etree.ElementTree as ET
 
 
-from aerial_gym import AERIAL_GYM_ROOT_DIR
+from rl_gym import AERIAL_GYM_ROOT_DIR
 
 from isaacgym import gymutil, gymtorch, gymapi
 from isaacgym.torch_utils import *
-from aerial_gym.envs.base.base_task import BaseTask
-from .drone_config import DroneCfg
-from aerial_gym.envs.controllers.controller import Controller
+from rl_gym.envs.base.base_task import BaseTask
+from .quad_config import QuadConfig
+from rl_gym.controllers.controller import Controller
 
 import matplotlib.pyplot as plt
-from aerial_gym.utils.helpers import asset_class_to_AssetOptions
+from rl_gym.utils.helpers import asset_class_to_AssetOptions
 import time
 
 
-class Drone(BaseTask):
+class Quadrotor(BaseTask):
 
-    def __init__(self, cfg: DroneCfg, sim_params, physics_engine, sim_device, headless):
+    def __init__(self, cfg: QuadConfig, sim_params, physics_engine, sim_device, headless):
         self.cfg = cfg
 
         self.max_episode_length = int(self.cfg.env.episode_length_s / self.cfg.sim.dt)

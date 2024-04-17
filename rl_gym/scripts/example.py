@@ -9,8 +9,8 @@ import os
 from datetime import datetime
 import time
 import isaacgym
-from aerial_gym.envs import *
-from aerial_gym.utils import get_args, task_registry
+from rl_gym.envs import *
+from rl_gym.utils import get_args, task_registry
 import torch
 
 def sample_command(args):

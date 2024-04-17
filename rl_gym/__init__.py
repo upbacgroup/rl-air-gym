@@ -7,6 +7,6 @@
 import os
 
 AERIAL_GYM_ROOT_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-AERIAL_GYM_ENVS_DIR = os.path.join(AERIAL_GYM_ROOT_DIR, 'aerial_gym', 'envs')
+AERIAL_GYM_ENVS_DIR = os.path.join(AERIAL_GYM_ROOT_DIR, 'rl_gym', 'envs')
 
 print("AERIAL_GYM_ROOT_DIR", AERIAL_GYM_ROOT_DIR)

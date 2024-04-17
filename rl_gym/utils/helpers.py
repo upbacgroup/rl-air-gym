@@ -57,7 +57,7 @@ def update_cfg_from_args(env_cfg, args):
 
 def get_args(additional_parameters=[]):
     custom_parameters = [
-        {"name": "--task", "type": str, "default": "quad", "help": "Resume training or start testing from a checkpoint. Overrides config file if provided."},
+        {"name": "--task", "type": str, "default": "drone", "help": "Resume training or start testing from a checkpoint. Overrides config file if provided."},
         {"name": "--headless", "action": "store_true", "default": False, "help": "Force display off at all times"},
         {"name": "--rl_device", "type": str, "default": "cuda:0", "help": 'Device used by the RL algorithm, (cpu, gpu, cuda:0, cuda:1 etc..)'},
         {"name": "--num_envs", "type": int, "default": "256", "help": "Number of environments to create. Overrides config file if provided."},

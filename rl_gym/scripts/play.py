@@ -4,12 +4,12 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-from aerial_gym import AERIAL_GYM_ROOT_DIR
+from rl_gym import AERIAL_GYM_ROOT_DIR
 import os
 
 import isaacgym
-from aerial_gym.envs import *
-from aerial_gym.utils import  get_args, task_registry, Logger
+from rl_gym.envs import *
+from rl_gym.utils import  get_args, task_registry, Logger
 
 import numpy as np
 import torch

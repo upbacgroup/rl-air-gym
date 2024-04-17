@@ -2,7 +2,7 @@ from setuptools import find_packages
 from distutils.core import setup
 
 setup(
-    name='rl_air_gym',
+    name='rl_gym',
     version='1.0.0',
     author='Huyen Dang',
     license="BSD-3-Clause",

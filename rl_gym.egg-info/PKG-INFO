@@ -1,0 +1,13 @@
+Metadata-Version: 2.1
+Name: rl_gym
+Version: 1.0.0
+Summary: Reinforcement learning for aerial navigation
+Author: Huyen Dang
+Author-email: vhdang@mail.uni-padeborn.de
+License: BSD-3-Clause
+License-File: LICENSE
+Requires-Dist: isaacgym
+Requires-Dist: matplotlib
+Requires-Dist: numpy
+Requires-Dist: torch
+Requires-Dist: pytorch3d
