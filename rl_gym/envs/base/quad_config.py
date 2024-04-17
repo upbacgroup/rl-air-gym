@@ -33,7 +33,7 @@ class QuadConfig(BaseConfig):
         kR: gains for attitude
         kOmega: gains for angular velocity
         """
-        controller = "take_off_control" # or "lee_velocity_control" or "lee_attitude_control" or "take_off_control"
+        controller = "lee_position_control" # or "lee_velocity_control" or "lee_attitude_control" or "take_off_control"
         kP = [0.8, 0.8, 1.0] # used for lee_position_control only
         kV = [0.5, 0.5, 0.4] # used for lee_position_control, lee_velocity_control only
         kR = [3.0, 3.0, 1.0] # used for lee_position_control, lee_velocity_control and lee_attitude_control
