@@ -282,16 +282,6 @@ def compute_quadcopter_reward(root_positions, root_quats, root_linvels, root_ang
     # uprigness and spinning only matter when close to the target
     reward = pos_reward + pos_reward * (up_reward + spinnage_reward) + dist_reward
 
-    # # resets due to misbehavior
-    # ones = torch.ones_like(reset_buf)
-    # die = torch.zeros_like(reset_buf)
-
-    # # resets due to episode length
-    # reset = torch.where(progress_buf >= max_episode_length - 1, ones, die)
-    # reset = torch.where(torch.norm(root_positions, dim=1) > 10.0, ones, reset)
-
-    
-    
     # resets due to misbehavior
     ones = torch.ones_like(reset_buf)
     die = torch.zeros_like(reset_buf)
@@ -300,16 +290,8 @@ def compute_quadcopter_reward(root_positions, root_quats, root_linvels, root_ang
 
     # z >= 0.5 & z <= 5.0 & up > 0
     die = torch.where(root_positions[..., 2] < 0.2, ones, die)
-    # die = torch.where(root_positions[..., 2] > 10.0, ones, die)
     reset = torch.where(progress_buf >= max_episode_length - 1, ones, die)
-    # if not reset.all():
-    #     reward = pos_reward + pos_reward * (up_reward + spinnage_reward) + dist_reward
-    # else:
-    #     reward = torch.zeros_like(pos_reward)
 
-    # resets due to episode length
     hard_reset = torch.where(progress_buf >= max_episode_length - 1, ones, hard_reset)
-    # print(f'hard_reset: {hard_reset}, reset+hard_reset: {reset+hard_reset}, progress_buf: {torch.mean(progress_buf)}')
 
     return reward, reset+hard_reset, reset
-    # return reward, reset_due_to_exceed_length*reach_level, reset_due_to_exceed_length+reset_due_to_misbehavior+reset_due_to_level+reset_due_to_level
