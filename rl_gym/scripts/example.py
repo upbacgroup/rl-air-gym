@@ -20,12 +20,12 @@ def sample_command(args):
     command_actions = torch.zeros((env_cfg.env.num_envs, env_cfg.env.num_actions))
     command_actions[:, 0] = 0.0
     command_actions[:, 1] = 0.0
-    command_actions[:, 2] = 0.0
+    command_actions[:, 2] = 6.0
     command_actions[:, 3] = 0.8
 
     env.reset()
     for i in range(0, 50000):
-        obs, priviliged_obs, rewards, resets, extras = env.step(command_actions)
+        obs, priviliged_obs, rewards, resets, extras, dones = env.step(command_actions)
             
         print("Done", i)
         if i % 500 == 0:

@@ -22,11 +22,6 @@ class ActorNetwork(nn.Module):
         self.fc2_dims = fc2_dims
         self.n_actions = n_actions
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
-        self.action_upper_limits = T.tensor(
-            [1, 1, 1, np.pi], device=self.device, dtype=T.float32)
-        self.action_lower_limits = T.tensor(
-            [-1, -1, 0.0, -np.pi], device=self.device, dtype=T.float32)
-
         self.checkpoint_file = os.path.join(chkpt_dir, name + '.pth')
 
         self.fc1 = nn.Linear(*self.input_dims, self.fc1_dims)
@@ -56,12 +51,10 @@ class ActorNetwork(nn.Module):
         
         x = self.fc1(state)
         x = self.bn1(x)
-        x = F.relu(x)
+        x = F.gelu(x)
         x = self.fc2(x)
         x = self.bn2(x)
         x = T.tanh(self.mu(x))
-        # x = F.softmax(self.mu(x), dim=1)
-        x.clamp(self.action_lower_limits, self.action_upper_limits)
         return x
 
     def save_checkpoint(self):
@@ -116,12 +109,12 @@ class CriticNetwork(nn.Module):
     def forward(self, state, action):
         state_value = self.fc1(state)
         state_value = self.bn1(state_value)
-        state_value = F.relu(state_value)
+        state_value = F.gelu(state_value)
         state_value = self.fc2(state_value)
         state_value = self.bn2(state_value)
 
-        action_value = F.relu(self.action_value(action))
-        state_action_value = T.tanh(T.add(state_value, action_value))
+        action_value = F.gelu(self.action_value(action))
+        state_action_value = F.gelu(T.add(state_value, action_value))
         state_action_value = self.q(state_action_value)
         return state_action_value
 

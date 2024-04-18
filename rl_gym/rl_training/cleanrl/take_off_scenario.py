@@ -167,8 +167,8 @@ if __name__ == "__main__":
     print("num obs: ", envs.num_obs)
     print("num envs:", args.num_envs)
 
-    agent = Agent(alpha=0.02e-1, beta=0.02e-1, tau=0.001, envs=envs, gamma=0.99,
-              max_size=100000, layer1_size=400, layer2_size=300, batch_size=16, num_envs=args.num_envs)
+    agent = Agent(alpha=0.02e-4, beta=0.02e-4, tau=0.001, envs=envs, gamma=0.99,
+              max_size=300000, layer1_size=128, layer2_size=128, batch_size=16, num_envs=args.num_envs)
     n_games = 100
 
     best_score = -10000.0
@@ -184,7 +184,7 @@ if __name__ == "__main__":
         reset = T.zeros(args.num_envs, dtype=T.float32).to(device)
         truncated = False
         score = 0
-        while not (reset or done):
+        while not (done.all() or reset.all()):
             action = agent.choose_action(observation[:, :3]) #observation[:, :3]
             new_states, reward, done, info, reset= envs.step(action)
             print(f'done: {done}, reset: {reset}')

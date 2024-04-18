@@ -498,7 +498,7 @@ if __name__ == "__main__":
     print("num obs: ", envs.num_obs)
     print("num envs:", args.num_envs)
 
-    agent = Agent(alpha=0.02e-1, beta=0.02e-1, tau=0.001, envs=envs, gamma=0.99,
+    agent = Agent(alpha=0.05e-1, beta=0.05e-1, tau=0.001, envs=envs, gamma=0.99,
               max_size=100000, layer1_size=400, layer2_size=300, batch_size=16, num_envs=args.num_envs)
     n_games = 100
 

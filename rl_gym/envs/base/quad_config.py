@@ -38,7 +38,7 @@ class QuadConfig(BaseConfig):
         kV = [0.5, 0.5, 0.4] # used for lee_position_control, lee_velocity_control only
         kR = [3.0, 3.0, 1.0] # used for lee_position_control, lee_velocity_control and lee_attitude_control
         kOmega = [0.5, 0.5, 1.20] # used for lee_position_control, lee_velocity_control and lee_attitude_control
-        scale_input = [10.0, 10.0, 10.0, 1] # scale the input to the controller from -1 to 1 for each dimension, scale from -np.pi to np.pi for yaw in the case of position control
+        scale_input = [10.0, 10.0, 10.0, 1.0] # scale the input to the controller from -1 to 1 for each dimension, scale from -np.pi to np.pi for yaw in the case of position control
 
     class robot_asset:
         # file = "{AERIAL_GYM_ROOT_DIR}/resources/robots/m500_urdf/urdf/m500.urdf"

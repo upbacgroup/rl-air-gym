@@ -13,7 +13,7 @@ class Agent:
         self.device_type = 'cuda:0'
         self.num_envs = num_envs
         self.batch_size = batch_size
-        input_dims = [3] #[envs.num_obs]
+        input_dims = [3] #envs.num_obs
         self.n_actions = envs.num_actions
         self.memory=ReplayBuffer(max_size, envs.num_obs, envs.num_actions, self.device_type, self.num_envs)
 

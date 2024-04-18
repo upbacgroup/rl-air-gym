@@ -44,5 +44,7 @@ class Controller:
     
     def __call__(self, robot_state, command_actions):
         # check if controller name matches class in dict
+        
         scaled_input = command_actions * self.scale_input
+        print(f'control command: {command_actions}, scaled_input: {scaled_input}')
         return self.controller(robot_state, scaled_input)

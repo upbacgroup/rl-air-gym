@@ -20,7 +20,7 @@ import time
 def play(args):
     env_cfg = task_registry.get_cfgs(name=args.task)
     
-    env_cfg.env.num_envs = min(env_cfg.env.num_envs, 50)
+    env_cfg.env.num_envs = min(env_cfg.env.num_envs, 1)
     env_cfg.control.controller = "lee_position_control"
 
     # prepare environment
@@ -37,11 +37,11 @@ def play(args):
             start_time = time.time()
         counter += 1
         actions = torch.zeros(env.num_envs, 4, device=env.device)
-        actions[:, 0] = 1
+        actions[:, 0] = 1.0
         actions[:, 1] = 1.0
-        actions[:, 2] = 1.0
-        actions[:, 3] = -0.8
-        obs, priviliged_obs, rewards, resets, extras = env.step(actions.detach())
+        actions[:, 2] = 6.0
+        actions[:, 3] = 0.0
+        obs, priviliged_obs, rewards, resets, extras, dones = env.step(actions.detach())
         if counter % 800 == 0:
             env.reset()
             end_time = time.time()
