@@ -423,12 +423,12 @@ if __name__ == "__main__":
 
     # env setup
     envs, env_cfg = task_registry.make_env(name="drone", args=args)
-    agent = Agent(alpha=0.25e-6, beta=0.25e-5, input_dims=[13], tau=0.001, env=envs,
-              batch_size=64,  layer1_size=400, layer2_size=300, n_actions=4)
+    agent = Agent(alpha=0.25e-3, beta=0.25e-4, input_dims=[13], tau=0.001, env=envs,
+              batch_size=64,  layer1_size=64, layer2_size=64, n_actions=4)
     load_checkpoint = False
-    n_games = 1000
+    n_games = 200
     score_history = []
-    best_score = -10000.0
+    best_score = -1000
     for i in range(n_games):
         obs = envs.reset()
         done = False

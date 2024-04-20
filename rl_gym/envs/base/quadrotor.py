@@ -256,24 +256,17 @@ def quat_axis(q, axis=0):
     basis_vec[:, axis] = 1
     return quat_rotate(q, basis_vec)
 
-
 @torch.jit.script
-def compute_quadcopter_reward(root_positions, root_quats, root_linvels, root_angvels, reset_buf, progress_buf, max_episode_length):
-    # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, float) -> Tuple[Tensor, Tensor, Tensor]
-
+def reward_function(actual_positions, root_quats, root_angvels):
+    # type: (Tensor, Tensor, Tensor) -> Tensor
+    # distance to target
+    target_dist = torch.sqrt(actual_positions[..., 0] * actual_positions[..., 0] +
+                             actual_positions[..., 1] * actual_positions[..., 1] +
+                             (6.0 - actual_positions[..., 2]) * (6.0-actual_positions[..., 2]))
     '''
-        Reward function is designed for take-off scenario that contains three criteria:
-            1. moving up? --> Vz should be positive
-            2. stablized? --> Euler angles: Pitch, Roll should be small or ideally zero
-            3. reach the desired location?: distance to the desired location is closer to zero
+        If target_distanc is zero --> reward is 1.0
     '''
-     # distance to target
-    target_dist = torch.sqrt(root_positions[..., 0] * root_positions[..., 0] +
-                             root_positions[..., 1] * root_positions[..., 1] +
-                             (6.0 - root_positions[..., 2]) * (6.0-root_positions[..., 2]))
-    pos_reward = 2.0 / (1.0 + target_dist * target_dist)
-
-    dist_reward = (20.0 - target_dist) / 40.0
+    pos_reward = torch.exp(-0.5*target_dist * target_dist)
 
     # uprightness
     ups = quat_axis(root_quats, 2)
@@ -286,7 +279,52 @@ def compute_quadcopter_reward(root_positions, root_quats, root_linvels, root_ang
 
     # combined reward
     # uprigness and spinning only matter when close to the target
-    reward = pos_reward + pos_reward * (up_reward + spinnage_reward) + dist_reward
+    reward = pos_reward + pos_reward * (up_reward + spinnage_reward) 
+
+    return reward
+
+@torch.jit.script
+def compute_quadcopter_reward(root_positions, root_quats, root_linvels, root_angvels, reset_buf, progress_buf, max_episode_length):
+    # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, float) -> Tuple[Tensor, Tensor, Tensor]
+
+    '''
+        Reward function is designed for take-off scenario that contains three criteria:
+            1. moving up? --> Vz should be positive
+            2. stablized? --> Euler angles: Pitch, Roll should be small or ideally zero
+            3. reach the desired location?: distance to the desired location is closer to zero
+    '''
+    # distance to target
+    target_dist = torch.sqrt(root_positions[..., 0] * root_positions[..., 0] +
+                             root_positions[..., 1] * root_positions[..., 1] +
+                             (6.0 - root_positions[..., 2]) * (6.0-root_positions[..., 2]))
+    '''
+        If target_distanc is zero --> reward is 1.0
+    '''
+    # pos_reward = torch.exp(-0.008*target_dist * target_dist)
+
+    dist_reward = -torch.exp(-1/(0.2 + target_dist*target_dist))
+
+    # uprightness
+    ups = quat_axis(root_quats, 2)
+    tiltage = torch.abs(1 - ups[..., 2])
+    up_reward = 1.0 / (1.0 + tiltage * tiltage)
+
+    # spinning
+    spinnage = torch.abs(root_angvels[..., 2])
+    spinnage_reward = 1.0 / (1.0 + spinnage * spinnage)
+    penalty_01 = 0.0
+    penalty_02 = 0.0
+    if root_positions[..., 2] < 0.4:
+        penalty_01 = -100.0
+    if target_dist > 10.0:
+        penalty_02 = -1.0
+
+
+        
+
+    # combined reward
+    # uprigness and spinning only matter when close to the target
+    reward =  dist_reward + penalty_01 + penalty_02 #pos_reward + pos_reward * (up_reward + spinnage_reward) +
 
 
     # target_dist = torch.sqrt(root_positions[..., 0] * root_positions[..., 0] +
@@ -312,7 +350,7 @@ def compute_quadcopter_reward(root_positions, root_quats, root_linvels, root_ang
     # resets due to misbehavior
     ones = torch.ones_like(reset_buf)
     die = torch.zeros_like(reset_buf)
-    die = torch.where(target_dist > 15.0, ones, die)
+    die = torch.where(target_dist > 10.0, ones, die)
 
     die = torch.where(root_positions[..., 2] < 0.4, ones, die)
     # resets due to episode length
