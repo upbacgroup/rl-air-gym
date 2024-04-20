@@ -37,9 +37,9 @@ def play(args):
             start_time = time.time()
         counter += 1
         actions = torch.zeros(env.num_envs, 4, device=env.device)
-        actions[:, 0] = 1.0
-        actions[:, 1] = 1.0
-        actions[:, 2] = 6.0
+        actions[:, 0] = 0.0
+        actions[:, 1] = 0.0
+        actions[:, 2] = 6.0/10.0
         actions[:, 3] = 0.0
         obs, priviliged_obs, rewards, resets, extras, dones = env.step(actions.detach())
         if counter % 800 == 0:

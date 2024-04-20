@@ -14,7 +14,7 @@ from isaacgym import gymutil
 import numpy as np
 import torch as T
 from torch.utils.tensorboard import SummaryWriter
-
+from copy import deepcopy
 
 from rl_gym.envs import *
 from rl_gym.utils import task_registry
@@ -167,8 +167,8 @@ if __name__ == "__main__":
     print("num obs: ", envs.num_obs)
     print("num envs:", args.num_envs)
 
-    agent = Agent(alpha=0.02e-4, beta=0.02e-4, tau=0.001, envs=envs, gamma=0.99,
-              max_size=300000, layer1_size=128, layer2_size=128, batch_size=16, num_envs=args.num_envs)
+    agent = Agent(alpha=0.0002, beta=0.001, tau=1e-6, envs=envs, gamma=0.99,
+              max_size=5000, layer1_size=128, layer2_size=128, batch_size=16, num_envs=args.num_envs)
     n_games = 100
 
     best_score = -10000.0
@@ -179,7 +179,8 @@ if __name__ == "__main__":
     evaluate = False
     # Learning with number of games
     for i in range(n_games):
-        observation, _= envs.reset()
+        observation_, _= envs.reset()
+        observation = deepcopy(observation_)
         done = T.zeros(args.num_envs, dtype=T.float32).to(device)
         reset = T.zeros(args.num_envs, dtype=T.float32).to(device)
         truncated = False
@@ -191,7 +192,7 @@ if __name__ == "__main__":
             agent.remember(observation[:, :3], action, reward, new_states[:, :3], done)
             agent.learn()
             score += reward
-            observation = new_states
+            observation = deepcopy(new_states)
         score_history.append(score.cpu().numpy())
         avg_score = np.mean(score_history[-100:])
 

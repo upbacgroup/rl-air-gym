@@ -267,48 +267,10 @@ def compute_quadcopter_reward(root_positions, root_quats, root_linvels, root_ang
             2. stablized? --> Euler angles: Pitch, Roll should be small or ideally zero
             3. reach the desired location?: distance to the desired location is closer to zero
     '''
-    # moving_up = False
-    # balance = False
-    # arrival = False
-    
-    # # Calculate the Euclidean distance between the two points
-    # desired_location = torch.tensor([0.0, 0.0, 6.0], device='cuda:0')
-    # distance = torch.norm(desired_location - root_positions)
-
-    # R1 = torch.exp(-1/(1 + 2*distance*distance))
-
-    # dist_reward = (20.0 - distance) / 40.0
-
-    # # uprightness
-    # ups = quat_axis(root_quats, 2)
-    # tiltage = torch.abs(1 - ups[..., 2])
-    # up_reward = 1.0 / (1.0 + 2*tiltage * tiltage)
-    # euler_reward0 = 1.0/(1.0 + 2* root_quats[..., 0] * root_quats[..., 0])
-    # euler_reward1 = 1.0/(1.0 + 2* root_quats[..., 1] * root_quats[..., 1])
-
-    # # spinning
-    # spinnage = torch.abs(root_angvels[..., 2])
-    # spinnage_reward = 1.0 / (1.0 + 2*spinnage * spinnage)
-
-    # # reward = 100.0*R1 + 
-    # reward = R1 - torch.exp(-1.0 / (1.0 + 2*tiltage * tiltage))
-
-    # # resets due to misbehavior
-    # ones = torch.ones_like(reset_buf)
-    # die = torch.zeros_like(reset_buf)
-    # die = torch.where(distance > 15.0, ones, die)
-    # die = torch.where(root_positions[..., 2] < 0.4, ones, die)
-    # die = torch.where(torch.abs(root_positions[..., 1]) > 5, ones, die)
-    # die = torch.where(torch.abs(root_positions[..., 0]) > 5, ones, die)
-
-    # reset = torch.where(progress_buf >= max_episode_length - 1, ones, die)
-
-    # complete = torch.zeros_like(reset_buf)
-    # complete = torch.where(distance < 1.0, ones, complete)
-    # distance to target
+     # distance to target
     target_dist = torch.sqrt(root_positions[..., 0] * root_positions[..., 0] +
                              root_positions[..., 1] * root_positions[..., 1] +
-                             (6.0-root_positions[..., 2]) * (6.0-root_positions[..., 2]))
+                             (6.0 - root_positions[..., 2]) * (6.0-root_positions[..., 2]))
     pos_reward = 2.0 / (1.0 + target_dist * target_dist)
 
     dist_reward = (20.0 - target_dist) / 40.0
@@ -322,15 +284,31 @@ def compute_quadcopter_reward(root_positions, root_quats, root_linvels, root_ang
     spinnage = torch.abs(root_angvels[..., 2])
     spinnage_reward = 1.0 / (1.0 + spinnage * spinnage)
 
-    if target_dist < 1.0:
-        level_reward = 100.0
-    else:
-        level_reward = -1000.0
-
     # combined reward
     # uprigness and spinning only matter when close to the target
-    reward = pos_reward + pos_reward * (up_reward + spinnage_reward) + dist_reward + level_reward
+    reward = pos_reward + pos_reward * (up_reward + spinnage_reward) + dist_reward
 
+
+    # target_dist = torch.sqrt(root_positions[..., 0] * root_positions[..., 0] +
+    #                          root_positions[..., 1] * root_positions[..., 1] +
+    #                          (6.0-root_positions[..., 2]) * (6.0-root_positions[..., 2]))
+    # pos_reward = 20 / (1.0 + target_dist * target_dist)
+
+    # dist_reward = (20.0 - target_dist) / 40.0
+
+    # # uprightness
+    # ups = quat_axis(root_quats, 2)
+    # tiltage = torch.abs(1 - ups[..., 2])
+    # up_reward = 1.0 / (1.0 + tiltage * tiltage)
+
+    # # spinning
+    # spinnage = torch.abs(root_angvels[..., 2])
+    # spinnage_reward = 1.0 / (1.0 + spinnage * spinnage)
+
+    # # combined reward
+    # # uprigness and spinning only matter when close to the target
+    # # reward = pos_reward + pos_reward * (up_reward + spinnage_reward) + dist_reward
+    # reward = -torch.exp(-10/(1 + 10*target_dist*target_dist))
     # resets due to misbehavior
     ones = torch.ones_like(reset_buf)
     die = torch.zeros_like(reset_buf)
@@ -338,9 +316,11 @@ def compute_quadcopter_reward(root_positions, root_quats, root_linvels, root_ang
 
     die = torch.where(root_positions[..., 2] < 0.4, ones, die)
     # resets due to episode length
-    reset = torch.where(progress_buf >= 2.0*max_episode_length - 1, ones, die)
+    reset = torch.where(progress_buf >= 1.0*max_episode_length - 1, ones, die)
     # reset = torch.where(torch.norm(root_positions, dim=1) > 10.0, ones, reset)
     complete = torch.zeros_like(reset_buf)
     complete = torch.where(target_dist <1.0, ones, complete)
+    terminate = torch.zeros_like(reset_buf)
+    terminate = torch.where(progress_buf >= 1.0*max_episode_length - 1, ones, terminate)
 
-    return reward, complete, reset
+    return reward, complete*terminate, reset

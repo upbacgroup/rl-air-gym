@@ -25,24 +25,24 @@ class ActorNetwork(nn.Module):
         self.checkpoint_file = os.path.join(chkpt_dir, name + '.pth')
 
         self.fc1 = nn.Linear(*self.input_dims, self.fc1_dims)
-        f1 = 3e-3 #1./np.sqrt(self.fc1.weight.data.size()[0])
+        f1 = 1./np.sqrt(self.fc1.weight.data.size()[0]) #3e-3 #
         T.nn.init.uniform_(self.fc1.weight.data, -f1, f1)
-        T.nn.init.uniform_(self.fc1.bias.data, -f1, f1)
+        # T.nn.init.uniform_(self.fc1.bias.data, -f1, f1)
 
         self.bn1 = nn.LayerNorm(self.fc1_dims)
 
         self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
-        f2 = 3e-3
-        # f2 = 1./np.sqrt(self.fc2.weight.data.size()[0])
+        # f2 = 3e-3
+        f2 = 1./np.sqrt(self.fc2.weight.data.size()[0])
         T.nn.init.uniform_(self.fc2.weight.data, -f2, f2)
-        T.nn.init.uniform_(self.fc2.bias.data, -f2, f2)
+        # T.nn.init.uniform_(self.fc2.bias.data, -f2, f2)
         self.bn2 = nn.LayerNorm(self.fc2_dims)
 
         f3 = 0.003
         self.mu = nn.Linear(self.fc2_dims, self.n_actions)
-
+        # f3 = 1./np.sqrt(self.mu.weight.data.size()[0])
         T.nn.init.uniform_(self.mu.weight.data, -f3, f3)
-        T.nn.init.uniform_(self.mu.bias.data, -f3, f3)
+        # T.nn.init.uniform_(self.mu.bias.data, -f3, f3)
 
         self.optimizer = optim.Adam(self.parameters(), lr=alpha)
         self.to(self.device)
@@ -51,10 +51,11 @@ class ActorNetwork(nn.Module):
         
         x = self.fc1(state)
         x = self.bn1(x)
-        x = F.gelu(x)
+        x = F.relu(x)
         x = self.fc2(x)
         x = self.bn2(x)
-        x = T.tanh(self.mu(x))
+        x = F.relu(x)
+        x = F.tanh(self.mu(x))
         return x
 
     def save_checkpoint(self):
@@ -80,16 +81,18 @@ class CriticNetwork(nn.Module):
         self.checkpoint_file = os.path.join(chkpt_dir, name + '.pth')
 
         self.fc1 = nn.Linear(*self.input_dims, self.fc1_dims)
-        f1 = 0.003 #1./np.sqrt(self.fc1.weight.data.size()[0])
+        # f1 = 0.003 #
+        f1 = 1./np.sqrt(self.fc1.weight.data.size()[0])
         T.nn.init.uniform_(self.fc1.weight.data, -f1, f1)
-        T.nn.init.uniform_(self.fc1.bias.data, -f1, f1)
+        # T.nn.init.uniform_(self.fc1.bias.data, -f1, f1)
         
         self.bn1 = nn.LayerNorm(self.fc1_dims)
 
         self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims) 
-        f2 = 0.003 #1./np.sqrt(self.fc2.weight.data.size()[0])
+        # f2 = 0.003 #
+        f2 = 1./np.sqrt(self.fc2.weight.data.size()[0])
         T.nn.init.uniform_(self.fc2.weight.data, -f2, f2)
-        T.nn.init.uniform_(self.fc2.bias.data, -f2, f2)
+        # T.nn.init.uniform_(self.fc2.bias.data, -f2, f2)
 
         self.bn2 = nn.LayerNorm(self.fc2_dims)
 
@@ -98,7 +101,8 @@ class CriticNetwork(nn.Module):
 
         f3 = 0.003
         self.q = nn.Linear(self.fc2_dims, 1)
-        # T.nn.init.uniform_(self.q.weight.data, -f3, f3)
+        # f3 = 1./np.sqrt(self.q.weight.data.size()[0])
+        T.nn.init.uniform_(self.q.weight.data, -f3, f3)
         # T.nn.init.uniform_(self.q.bias.data, -f3, f3)
     
 
@@ -109,12 +113,13 @@ class CriticNetwork(nn.Module):
     def forward(self, state, action):
         state_value = self.fc1(state)
         state_value = self.bn1(state_value)
-        state_value = F.gelu(state_value)
+        state_value = F.relu(state_value)
         state_value = self.fc2(state_value)
         state_value = self.bn2(state_value)
+        state_value = F.relu(state_value)
 
-        action_value = F.gelu(self.action_value(action))
-        state_action_value = F.gelu(T.add(state_value, action_value))
+        action_value = F.relu(self.action_value(action))
+        state_action_value = F.relu(T.add(state_value, action_value))
         state_action_value = self.q(state_action_value)
         return state_action_value
 

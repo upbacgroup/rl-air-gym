@@ -1,0 +1,357 @@
+<robot name="m500" version="1.0">
+  <joint name="base_joint" type="fixed">
+    <origin rpy="-0.00000 0.00000 -0.00000" xyz="0.00197 -0.00019 0.06562"/>
+    <parent link="world"/>
+    <child link="base_link"/>
+  </joint>
+  <joint name="camB_joint" type="fixed">
+    <origin rpy="0.00000 0.00000 -0.00000" xyz="-0.09175 0.00003 0.00338"/>
+    <parent link="base_link"/>
+    <child link="camB_link"/>
+  </joint>
+  <joint name="camL_joint" type="fixed">
+    <origin rpy="0.00000 0.00000 -0.00000" xyz="-0.08680 -0.04006 0.00951"/>
+    <parent link="base_link"/>
+    <child link="camL_link"/>
+  </joint>
+  <joint name="camR_joint" type="fixed">
+    <origin rpy="0.00000 0.00000 -0.00000" xyz="-0.08680 0.03998 0.00950"/>
+    <parent link="base_link"/>
+    <child link="camR_link"/>
+  </joint>
+  <joint name="camT_joint" type="fixed">
+    <origin rpy="-0.00000 -0.00000 0.00000" xyz="-0.08488 -0.00003 0.02466"/>
+    <parent link="base_link"/>
+    <child link="camT_link"/>
+  </joint>
+  <joint name="ccw1_joint" type="revolute">
+    <limit lower="-3.14000" upper="3.14000" effort="0.19000" velocity="1020.00000"/>
+    <origin rpy="0.00000 0.00000 -0.00000" xyz="-0.17135 0.17034 0.05793"/>
+    <parent link="base_link"/>
+    <child link="ccw1_link"/>
+    <axis xyz="0.00000 0.00000 1.00000"/>
+  </joint>
+  <joint name="ccw2_joint" type="revolute">
+    <limit lower="-3.14000" upper="3.14000" effort="0.19000" velocity="1020.00000"/>
+    <origin rpy="-0.00000 -0.00000 0.00000" xyz="0.16693 -0.16964 0.05793"/>
+    <parent link="base_link"/>
+    <child link="ccw2_link"/>
+    <axis xyz="0.00000 0.00000 1.00000"/>
+  </joint>
+  <joint name="cw3_joint" type="revolute">
+    <limit lower="-3.14000" upper="3.14000" effort="0.19000" velocity="1020.00000"/>
+    <origin rpy="0.00000 0.00000 -0.00000" xyz="-0.17332 -0.16792 0.05892"/>
+    <parent link="base_link"/>
+    <child link="cw3_link"/>
+    <axis xyz="0.00000 0.00000 1.00000"/>
+  </joint>
+  <joint name="cw4_joint" type="revolute">
+    <limit lower="-3.14000" upper="3.14000" effort="0.19000" velocity="1020.00000"/>
+    <origin rpy="-0.00000 -0.00000 0.00000" xyz="0.16744 0.16876 0.05891"/>
+    <parent link="base_link"/>
+    <child link="cw4_link"/>
+    <axis xyz="0.00000 0.00000 1.00000"/>
+  </joint>
+  <joint name="flight_imu2_joint" type="fixed">
+    <origin rpy="0.00000 -0.00000 0.00000" xyz="0.01694 -0.01553 0.01550"/>
+    <parent link="base_link"/>
+    <child link="flight_imu2_link"/>
+  </joint>
+  <joint name="flight_imu3_joint" type="fixed">
+    <origin rpy="-0.00000 -0.00000 0.00000" xyz="0.00868 -0.01481 0.01550"/>
+    <parent link="base_link"/>
+    <child link="flight_imu3_link"/>
+  </joint>
+  <joint name="gps_joint" type="fixed">
+    <origin rpy="0.00000 0.00000 -0.00000" xyz="0.04267 -0.04462 0.09650"/>
+    <parent link="base_link"/>
+    <child link="gps_link"/>
+  </joint>
+  <joint name="voxl_imu0_joint" type="fixed">
+    <origin rpy="0.00000 -0.00000 0.00000" xyz="-0.02388 0.01382 0.01550"/>
+    <parent link="base_link"/>
+    <child link="voxl_imu0_link"/>
+  </joint>
+  <joint name="voxl_imu1_joint" type="fixed">
+    <origin rpy="-0.00000 -0.00000 0.00000" xyz="-0.07228 -0.01523 0.01757"/>
+    <parent link="base_link"/>
+    <child link="voxl_imu1_link"/>
+  </joint>
+  <link name="base_link">
+    <collision name="body_collision">
+      <origin rpy="1.57080 -0.00000 0.00000" xyz="-0.00006 0.00001 -0.02002"/>
+      <geometry>
+        <box size="0.39546 0.08929 0.39451"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <inertia ixx="0.01010" ixy="0.00001" ixz="0.00010" iyy="0.01031" iyz="-0.00000" izz="0.01934"/>
+      <origin rpy="0.00000 0.00000 0.00000" xyz="-0.00674 0.00016 0.00278"/>
+      <mass value="1.16300"/>
+    </inertial>
+    <visual name="body">
+      <origin rpy="1.57080 -0.00000 0.00000" xyz="0.00000 -0.00000 -0.00000"/>
+      <material name="voxl_flight_part"/>
+      <geometry>
+        <mesh filename="../meshes/dae/body.dae" scale="1.00000 1.00000 1.00000"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="camB_link">
+    <sensor name="camBot_sensor" type="camera">
+      <origin rpy="0.54938 -1.57080 -0.54938" xyz="0.00000 -0.00000 0.00000"/>
+      <parent link="camB_link"/>
+      <camera>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <hfov>1.57080</hfov>
+        </image>
+      </camera>
+    </sensor>
+    <visual name="camB">
+      <origin rpy="1.57080 -0.00000 0.00000" xyz="0.00000 -0.00000 0.00000"/>
+      <material name="camBot"/>
+      <geometry>
+        <mesh filename="../meshes/dae/camB.dae" scale="1.00000 1.00000 1.00000"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="camL_link">
+    <sensor name="camLeft_sensor" type="camera">
+      <origin rpy="0.54938 -1.57080 -0.54938" xyz="-0.00000 0.00000 0.00000"/>
+      <parent link="camL_link"/>
+      <camera>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <hfov>1.57080</hfov>
+        </image>
+      </camera>
+    </sensor>
+    <visual name="camL">
+      <origin rpy="1.57080 -0.00000 0.00000" xyz="-0.00000 0.00000 0.00000"/>
+      <material name="camLeft"/>
+      <geometry>
+        <mesh filename="../meshes/dae/camL.dae" scale="1.00000 1.00000 1.00000"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="camR_link">
+    <sensor name="camRight_sensor" type="camera">
+      <origin rpy="0.54938 -1.57080 -0.54938" xyz="-0.00000 -0.00000 -0.00000"/>
+      <parent link="camR_link"/>
+      <camera>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <hfov>1.57080</hfov>
+        </image>
+      </camera>
+    </sensor>
+    <visual name="camR">
+      <origin rpy="1.57080 -0.00000 0.00000" xyz="0.00000 -0.00000 -0.00000"/>
+      <material name="camRight"/>
+      <geometry>
+        <mesh filename="../meshes/dae/camR.dae" scale="1.00000 1.00000 1.00000"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="camT_link">
+    <sensor name="camTop_sensor" type="camera">
+      <origin rpy="0.54938 -1.57080 -0.54938" xyz="-0.00000 -0.00000 -0.00000"/>
+      <parent link="camT_link"/>
+      <camera>
+        <image>
+          <width>1920</width>
+          <height>1080</height>
+          <hfov>1.57080</hfov>
+        </image>
+      </camera>
+    </sensor>
+    <visual name="camT">
+      <origin rpy="1.57080 0.00000 0.00000" xyz="-0.00000 -0.00000 -0.00000"/>
+      <material name="camTop"/>
+      <geometry>
+        <mesh filename="../meshes/dae/camT.dae" scale="1.00000 1.00000 1.00000"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="ccw1_link">
+    <collision name="ccw1_collision">
+      <origin rpy="1.57080 -0.00000 0.00000" xyz="0.00000 -0.00000 0.00001"/>
+      <geometry>
+        <box size="0.02773 0.01775 0.26619"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <inertia ixx="0.00004" ixy="-0.00000" ixz="-0.00000" iyy="0.00000" iyz="-0.00000" izz="0.00004"/>
+      <origin rpy="0.00000 0.00000 0.00000" xyz="0.00000 0.00000 -0.00000"/>
+      <mass value="0.01200"/>
+    </inertial>
+    <visual name="ccw1">
+      <origin rpy="1.57080 -0.00000 0.00000" xyz="0.00000 -0.00000 0.00000"/>
+      <material name="Propeller_ccw1"/>
+      <geometry>
+        <mesh filename="../meshes/dae/propeller_ccw1.dae" scale="1.00000 1.00000 1.00000"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="ccw2_link">
+    <collision name="ccw2_collision">
+      <origin rpy="1.57080 0.00000 0.00000" xyz="-0.00000 0.00000 0.00001"/>
+      <geometry>
+        <box size="0.02773 0.01767 0.26624"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <inertia ixx="0.00004" ixy="-0.00000" ixz="0.00000" iyy="0.00000" iyz="0.00000" izz="0.00004"/>
+      <origin rpy="0.00000 0.00000 0.00000" xyz="-0.00000 -0.00000 -0.00000"/>
+      <mass value="0.01200"/>
+    </inertial>
+    <visual name="ccw2">
+      <origin rpy="1.57080 0.00000 0.00000" xyz="0.00000 -0.00000 0.00000"/>
+      <material name="Propeller_ccw2"/>
+      <geometry>
+        <mesh filename="../meshes/dae/propeller_ccw2.dae" scale="1.00000 1.00000 1.00000"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="cw3_link">
+    <collision name="cw3_collision">
+      <origin rpy="1.57080 -0.00000 0.00000" xyz="-0.00000 -0.00000 -0.00001"/>
+      <geometry>
+        <box size="0.02811 0.01759 0.26621"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <inertia ixx="0.00004" ixy="0.00000" ixz="-0.00000" iyy="0.00000" iyz="0.00000" izz="0.00004"/>
+      <origin rpy="0.00000 0.00000 0.00000" xyz="-0.00000 0.00000 -0.00000"/>
+      <mass value="0.01200"/>
+    </inertial>
+    <visual name="cw3">
+      <origin rpy="1.57080 -0.00000 0.00000" xyz="0.00000 0.00000 -0.00000"/>
+      <material name="Propeller_cw3"/>
+      <geometry>
+        <mesh filename="../meshes/dae/propeller_cw3.dae" scale="1.00000 1.00000 1.00000"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="cw4_link">
+    <collision name="cw4_collision">
+      <origin rpy="1.57080 0.00000 0.00000" xyz="0.00000 0.00000 -0.00001"/>
+      <geometry>
+        <box size="0.02812 0.01767 0.26621"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <inertia ixx="0.00004" ixy="0.00000" ixz="0.00000" iyy="0.00000" iyz="-0.00000" izz="0.00004"/>
+      <origin rpy="0.00000 0.00000 0.00000" xyz="-0.00000 0.00000 -0.00000"/>
+      <mass value="0.01200"/>
+    </inertial>
+    <visual name="cw4">
+      <origin rpy="1.57080 0.00000 0.00000" xyz="0.00000 0.00000 -0.00000"/>
+      <material name="Propeller_cw4"/>
+      <geometry>
+        <mesh filename="../meshes/dae/propeller_cw4.dae" scale="1.00000 1.00000 1.00000"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="flight_imu2_link">
+    <visual name="flight_imu2">
+      <origin rpy="1.57080 0.00000 0.00000" xyz="0.00000 -0.00000 0.00000"/>
+      <material name="flight_imu2"/>
+      <geometry>
+        <box size="0.00300 0.00089 0.00250"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="flight_imu3_link">
+    <visual name="flight_imu3">
+      <origin rpy="1.57080 0.00000 0.00000" xyz="0.00000 0.00000 -0.00000"/>
+      <material name="flight_imu3"/>
+      <geometry>
+        <box size="0.00305 0.00095 0.00455"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="gps_link">
+    <collision name="gps_collision">
+      <origin rpy="-3.14159 0.00000 0.00000" xyz="0.00012 -0.00000 -0.02201"/>
+      <geometry>
+        <cylinder radius="0.02479" length="0.09421"/>
+      </geometry>
+    </collision>
+    <sensor name="gps_sensor" type="GPS">
+      <parent link="gps_link"/>
+    </sensor>
+    <visual name="gps">
+      <origin rpy="1.57080 -0.00000 0.00000" xyz="0.00000 -0.00000 -0.00000"/>
+      <material name="switch"/>
+      <geometry>
+        <mesh filename="../meshes/dae/gps.dae" scale="1.00000 1.00000 1.00000"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="voxl_imu0_link">
+    <visual name="voxl_imu0">
+      <origin rpy="1.57080 0.00000 0.00000" xyz="-0.00000 0.00000 0.00000"/>
+      <material name="voxl_imu0"/>
+      <geometry>
+        <box size="0.00300 0.00089 0.00250"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="voxl_imu1_link">
+    <visual name="voxl_imu1">
+      <origin rpy="1.57080 0.00000 0.00000" xyz="0.00000 0.00000 -0.00000"/>
+      <material name="voxl_imu1"/>
+      <geometry>
+        <box size="0.00310 0.00105 0.00310"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="world"/>
+  <material name="Propeller_ccw1">
+    <color rgba="0.01961 0.01961 0.01961 1.00000"/>
+  </material>
+  <material name="Propeller_ccw2">
+    <color rgba="0.01961 0.01961 0.01961 1.00000"/>
+  </material>
+  <material name="Propeller_cw3">
+    <color rgba="0.01961 0.01961 0.01961 1.00000"/>
+  </material>
+  <material name="Propeller_cw4">
+    <color rgba="0.01961 0.01961 0.01961 1.00000"/>
+  </material>
+  <material name="camBot">
+    <color rgba="0.12941 0.12941 0.12941 1.00000"/>
+  </material>
+  <material name="camLeft">
+    <color rgba="0.12941 0.12941 0.12941 1.00000"/>
+  </material>
+  <material name="camRight">
+    <color rgba="0.12941 0.12941 0.12941 1.00000"/>
+  </material>
+  <material name="camTop">
+    <color rgba="0.12941 0.12941 0.12941 1.00000"/>
+  </material>
+  <material name="flight_imu2">
+    <color rgba="0.00000 0.00000 0.00000 1.00000"/>
+  </material>
+  <material name="flight_imu3">
+    <color rgba="0.00000 0.00000 0.00000 1.00000"/>
+  </material>
+  <material name="switch">
+    <color rgba="0.58824 0.58824 0.58824 0.74902"/>
+  </material>
+  <material name="voxl_flight_part">
+    <color rgba="0.49804 0.49804 0.49804 1.00000"/>
+  </material>
+  <material name="voxl_imu0">
+    <color rgba="0.00000 0.00000 0.00000 1.00000"/>
+  </material>
+  <material name="voxl_imu1">
+    <color rgba="0.00000 0.00000 0.00000 1.00000"/>
+  </material>
+</robot>
