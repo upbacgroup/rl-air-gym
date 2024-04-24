@@ -297,13 +297,24 @@ def compute_quadcopter_reward(root_positions, root_quats, root_linvels, root_ang
     target_dist = torch.sqrt(root_positions[..., 0] * root_positions[..., 0] +
                              root_positions[..., 1] * root_positions[..., 1] +
                              (6.0 - root_positions[..., 2]) * (6.0-root_positions[..., 2]))
+    
+    # Velocity to target
+    velocity =  torch.sqrt((root_linvels[..., 0]) * (root_linvels[..., 0]) +
+                             (root_linvels[..., 1]) * (root_linvels[..., 1]) +
+                             (root_linvels[..., 2]) * (root_linvels[..., 2]))
+
     '''
         If target_distanc is zero --> reward is 1.0
     '''
-    # pos_reward = torch.exp(-0.008*target_dist * target_dist)
+    dis_reward = -target_dist/5.0 + 1
+    # pos_reward = torch.exp(-0.1*target_dist * target_dist)
+    pos_reward = 2.0 / (1.0 + target_dist * target_dist)
 
-    dist_reward = -torch.exp(-1/(0.2 + target_dist*target_dist))
+    velocity_reward = (1.0 / (1.0 + torch.abs(3.0 -velocity)*torch.abs(1.0 -velocity)))
+    Eq_vel_reward = (1.0 / (1.0 + torch.abs(velocity)*torch.abs(velocity) ))
 
+    # velocity_reward = -torch.exp(-1/(1.0 *(3.0 -velocity)*(3.0 -velocity)))  
+    # Eq_vel_reward = -torch.exp(-1/(1.0 *(0.0 -velocity)*(0.0 -velocity))) 
     # uprightness
     ups = quat_axis(root_quats, 2)
     tiltage = torch.abs(1 - ups[..., 2])
@@ -312,53 +323,27 @@ def compute_quadcopter_reward(root_positions, root_quats, root_linvels, root_ang
     # spinning
     spinnage = torch.abs(root_angvels[..., 2])
     spinnage_reward = 1.0 / (1.0 + spinnage * spinnage)
-    penalty_01 = 0.0
-    penalty_02 = 0.0
-    if root_positions[..., 2] < 0.4:
-        penalty_01 = -100.0
-    if target_dist > 10.0:
-        penalty_02 = -1.0
-
 
         
 
     # combined reward
     # uprigness and spinning only matter when close to the target
-    reward =  dist_reward + penalty_01 + penalty_02 #pos_reward + pos_reward * (up_reward + spinnage_reward) +
+    reward = pos_reward + pos_reward *(up_reward + spinnage_reward) #+ (1-pos_reward)*velocity_reward  -target_dist+5.0
 
-
-    # target_dist = torch.sqrt(root_positions[..., 0] * root_positions[..., 0] +
-    #                          root_positions[..., 1] * root_positions[..., 1] +
-    #                          (6.0-root_positions[..., 2]) * (6.0-root_positions[..., 2]))
-    # pos_reward = 20 / (1.0 + target_dist * target_dist)
-
-    # dist_reward = (20.0 - target_dist) / 40.0
-
-    # # uprightness
-    # ups = quat_axis(root_quats, 2)
-    # tiltage = torch.abs(1 - ups[..., 2])
-    # up_reward = 1.0 / (1.0 + tiltage * tiltage)
-
-    # # spinning
-    # spinnage = torch.abs(root_angvels[..., 2])
-    # spinnage_reward = 1.0 / (1.0 + spinnage * spinnage)
-
-    # # combined reward
-    # # uprigness and spinning only matter when close to the target
-    # # reward = pos_reward + pos_reward * (up_reward + spinnage_reward) + dist_reward
-    # reward = -torch.exp(-10/(1 + 10*target_dist*target_dist))
-    # resets due to misbehavior
     ones = torch.ones_like(reset_buf)
     die = torch.zeros_like(reset_buf)
-    die = torch.where(target_dist > 10.0, ones, die)
-
-    die = torch.where(root_positions[..., 2] < 0.4, ones, die)
+    # Reset due to misbehavior
+    die = torch.where(target_dist > 20.0, ones, die)
+    die = torch.where(root_positions[..., 2] < 0.3, ones, die)
+    # die = torch.where(torch.norm(root_positions, dim=1) > 10.0, ones, die)
     # resets due to episode length
-    reset = torch.where(progress_buf >= 1.0*max_episode_length - 1, ones, die)
-    # reset = torch.where(torch.norm(root_positions, dim=1) > 10.0, ones, reset)
+    reset = torch.where(progress_buf >= 1.*max_episode_length - 1, ones, die)
+    
+    # Complete episode successfully
     complete = torch.zeros_like(reset_buf)
     complete = torch.where(target_dist <1.0, ones, complete)
     terminate = torch.zeros_like(reset_buf)
-    terminate = torch.where(progress_buf >= 1.0*max_episode_length - 1, ones, terminate)
+    terminate = torch.where(progress_buf >= 1.*max_episode_length - 1, ones, terminate)
 
     return reward, complete*terminate, reset
+

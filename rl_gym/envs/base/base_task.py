@@ -69,11 +69,12 @@ class BaseTask():
         torch._C._jit_set_profiling_executor(False)
 
         # allocate buffers
-        self.obs_buf = torch.zeros(self.num_envs, self.num_obs, device=self.device, dtype=torch.float)
-        self.rew_buf = torch.zeros(self.num_envs, device=self.device, dtype=torch.float)
+        self.obs_buf = torch.zeros(self.num_envs, self.num_obs, device=self.device, dtype=torch.float32)
+        self.rew_buf = torch.zeros(self.num_envs, device=self.device, dtype=torch.float32)
         self.reset_buf = torch.ones(self.num_envs, device=self.device, dtype=torch.long)
         self.time_out_buf = torch.zeros(self.num_envs, device=self.device, dtype=torch.bool)
         self.dones = torch.zeros(self.num_envs, device=self.device, dtype=torch.long)
+        self.prev_potential_buf = torch.zeros(self.num_envs, device=self.device, dtype=torch.float32)
 
         self.extras = {}
 

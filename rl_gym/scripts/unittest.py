@@ -20,7 +20,7 @@ from torch.utils.tensorboard import SummaryWriter
 from copy import deepcopy
 
 from rl_gym.envs import *
-from rl_gym.utils import task_registry
+from rl_gym.utils import task_registry, Logger
 from rl_gym.rl_training.agent.utils import plot_learning_curve
 import matplotlib.pyplot as plt
 
@@ -102,6 +102,7 @@ class ReplayBuffer(object):
         # self.num_envs = num_envs
         self.num_obs = input_shape
         self.num_actions = n_actions
+
         # ALGO Logic: Storage setup
         self.state_memory = T.zeros((self.mem_size, *self.num_obs), dtype=T.float32).to(self.device)
         self.new_state_memory = T.zeros((self.mem_size, *self.num_obs), dtype=T.float32).to(self.device)
@@ -115,13 +116,14 @@ class ReplayBuffer(object):
         self.new_state_memory[index] = state_
         self.action_memory[index] = action
         self.reward_memory[index] = reward
-        self.terminal_memory[index] = done
+        self.terminal_memory[index] = 1 - done
         self.mem_cntr += 1
 
     def sample_buffer(self, batch_size):
         max_mem = min(self.mem_cntr, self.mem_size)
 
         batch = T.randint(0, max_mem, (batch_size,), device=self.device)
+
         states = self.state_memory[batch]
         actions = self.action_memory[batch]
         rewards = self.reward_memory[batch]
@@ -129,28 +131,6 @@ class ReplayBuffer(object):
         terminal = self.terminal_memory[batch]
 
         return states, actions, rewards, states_, terminal
-
-class OUActionNoise(object):
-    def __init__(self, mu, sigma=0.15, theta=.2, dt=1e-3, x0=None):
-        self.theta = theta
-        self.mu = mu
-        self.sigma = sigma
-        self.dt = dt
-        self.x0 = x0
-        self.reset()
-
-    def __call__(self):
-        x = self.x_prev + self.theta * (self.mu - self.x_prev) * self.dt + \
-            self.sigma * np.sqrt(self.dt) * np.random.normal(size=self.mu.shape)
-        self.x_prev = x
-        return x
-
-    def reset(self):
-        self.x_prev = self.x0 if self.x0 is not None else np.zeros_like(self.mu)
-
-    def __repr__(self):
-        return 'OrnsteinUhlenbeckActionNoise(mu={}, sigma={})'.format(
-                                                            self.mu, self.sigma)
 class CriticNetwork(nn.Module):
     def __init__(self, beta, input_dims, fc1_dims, fc2_dims, n_actions, name,
                  chkpt_dir='tmp/ddpg'):
@@ -165,7 +145,6 @@ class CriticNetwork(nn.Module):
         f1 = 1./np.sqrt(self.fc1.weight.data.size()[0])
         T.nn.init.uniform_(self.fc1.weight.data, -f1, f1)
         T.nn.init.uniform_(self.fc1.bias.data, -f1, f1)
-
 
         self.bn1 = nn.LayerNorm(self.fc1_dims)
 
@@ -183,7 +162,7 @@ class CriticNetwork(nn.Module):
         T.nn.init.uniform_(self.q.weight.data, -f3, f3)
         T.nn.init.uniform_(self.q.bias.data, -f3, f3)
 
-        self.optimizer = optim.Adam(self.parameters(), weight_decay=1e-6)
+        self.optimizer = optim.Adam(self.parameters(), weight_decay= 1e-6)
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cuda:1')
 
         self.to(self.device)
@@ -253,10 +232,6 @@ class ActorNetwork(nn.Module):
 
         return x
 
-    def save_checkpoint(self):
-        print('... saving checkpoint ...')
-        T.save(self.state_dict(), self.checkpoint_file)
-
     def load_checkpoint(self):
         print('... loading checkpoint ...')
         self.load_state_dict(T.load(self.checkpoint_file))
@@ -284,104 +259,9 @@ class Agent(object):
                                            layer2_size, n_actions=n_actions,
                                            name='TargetCritic')
 
-        self.noise = OUActionNoise(mu=np.zeros(n_actions))
-
-        self.update_network_parameters(tau=1)
-
     def choose_action(self, observation):
-        self.actor.eval()
         mu = self.actor.forward(observation)
-        mu_prime = mu + T.tensor(self.noise(),
-                                 dtype=T.float32).to(self.actor.device)
-        self.actor.train()
-        return mu_prime
-
-
-    def remember(self, state, action, reward, new_state, done):
-        self.memory.store_transition(state, action, reward, new_state, done)
-
-    def learn(self):
-        if self.memory.mem_cntr < self.batch_size:
-            return
-        state_, action_, reward_, new_state_, done_ = \
-                                      self.memory.sample_buffer(self.batch_size)
-
-        reward = reward_.clone().detach().requires_grad_(True)
-        done = done_.clone().detach().requires_grad_(True)
-        new_state = new_state_.clone().detach().requires_grad_(True)
-        action = action_.clone().detach().requires_grad_(True)
-        state = state_.clone().detach().requires_grad_(True)
-
-        self.target_actor.eval()
-        self.target_critic.eval()
-        self.critic.eval()
-        target_actions = self.target_actor.forward(new_state)
-        critic_value_ = self.target_critic.forward(new_state, target_actions)
-        critic_value = self.critic.forward(state, action)
-
-        target = []
-        for j in range(self.batch_size):
-            target.append(reward[j] + self.gamma*critic_value_[j]*(1-done[j]))
-        target = T.tensor(target).to(self.critic.device)
-        target = target.view(self.batch_size, 1)
-
-        self.critic.train()
-        self.critic.optimizer.zero_grad()
-        critic_loss = F.mse_loss(target, critic_value)
-        critic_loss.backward()
-        self.critic.optimizer.step()
-
-        self.critic.eval()
-        self.actor.optimizer.zero_grad()
-        mu = self.actor.forward(state)
-        self.actor.train()
-        actor_loss = -self.critic.forward(state, mu)
-        actor_loss = T.mean(actor_loss)
-        actor_loss.backward()
-        self.actor.optimizer.step()
-
-        self.update_network_parameters()
-
-    def update_network_parameters(self, tau=None):
-        if tau is None:
-            tau = self.tau
-
-        actor_params = self.actor.named_parameters()
-        critic_params = self.critic.named_parameters()
-        target_actor_params = self.target_actor.named_parameters()
-        target_critic_params = self.target_critic.named_parameters()
-
-        critic_state_dict = dict(critic_params)
-        actor_state_dict = dict(actor_params)
-        target_critic_dict = dict(target_critic_params)
-        target_actor_dict = dict(target_actor_params)
-
-        for name in critic_state_dict:
-            critic_state_dict[name] = tau*critic_state_dict[name].clone() + \
-                                      (1-tau)*target_critic_dict[name].clone()
-
-        self.target_critic.load_state_dict(critic_state_dict)
-
-        for name in actor_state_dict:
-            actor_state_dict[name] = tau*actor_state_dict[name].clone() + \
-                                      (1-tau)*target_actor_dict[name].clone()
-        self.target_actor.load_state_dict(actor_state_dict)
-
-        """
-        #Verify that the copy assignment worked correctly
-        target_actor_params = self.target_actor.named_parameters()
-        target_critic_params = self.target_critic.named_parameters()
-
-        critic_state_dict = dict(target_critic_params)
-        actor_state_dict = dict(target_actor_params)
-        print('\nActor Networks', tau)
-        for name, param in self.actor.named_parameters():
-            print(name, T.equal(param, actor_state_dict[name]))
-        print('\nCritic Networks', tau)
-        for name, param in self.critic.named_parameters():
-            print(name, T.equal(param, critic_state_dict[name]))
-        input()
-        """
+        return mu
     def save_models(self):
         self.actor.save_checkpoint()
         self.target_actor.save_checkpoint()
@@ -389,61 +269,54 @@ class Agent(object):
         self.target_critic.save_checkpoint()
 
     def load_models(self):
+        print("..........Loading model...........")
         self.actor.load_checkpoint()
         self.target_actor.load_checkpoint()
         self.critic.load_checkpoint()
         self.target_critic.load_checkpoint()
+        print("..........Loading model done...........")
+    
+
+def play(args, agent, env, env_cfg):
+    
+    
+    logger = Logger(env.dt)
+    robot_index = 0 # which robot is used for logging
+    stop_state_log = 800 # number of steps before plotting states
+    counter = 0
+
+    observation, _ = env.reset()
+    for i in range(1000*int(env.max_episode_length)):
+        if counter == 0:
+            start_time = time.time()
+        counter += 1
+        states = observation.clone()
+
+        actions = agent.choose_action(states)
+        obs, _, rewards, *_ = env.step(actions.detach())
+        observation = obs.clone()
+
 
 
 if __name__ == "__main__":
     args = get_args()
-    # TRY NOT TO MODIFY: seeding
-    random.seed(args.seed)
-    np.random.seed(args.seed)
-    T.manual_seed(args.seed)
-    T.backends.cudnn.deterministic = args.torch_deterministic
+    
+    # # env setup
+    env_cfg = task_registry.get_cfgs(name="drone")
+    
+    env_cfg.env.num_envs = min(env_cfg.env.num_envs, 1)
+    env_cfg.control.controller = "lee_position_control"
 
-    device = args.sim_device
-    print("using device:", device)
+    # prepare environment
+    env, *_ = task_registry.make_env(name=args.task, args=args, env_cfg=env_cfg)
 
-    # env setup
-    envs, env_cfg = task_registry.make_env(name="drone", args=args)
-    # self, alpha, beta, input_dims, tau, env, gamma=0.99, n_actions=4, max_size=1000000, layer1_size=400, layer2_size=300, batch_size=64):
-    agent = Agent(alpha=1e-6, beta=1e-3, input_dims=[13], tau=0.001, gamma= 0.99, n_actions=4, max_size=1000000, env=envs,
+    EXPORT_POLICY = True
+    RECORD_FRAMES = False
+    MOVE_CAMERA = False
+    args = get_args()
+    print("Arg.task: ", args.task)
+    # print("using device:", device)
+    agent = Agent(alpha=1e-4, beta=1e-3, input_dims=[13], tau=0.001, gamma= 0.99, n_actions=4, max_size=1000000, env=env,
             layer1_size=400, layer2_size=300, batch_size=64)
-    load_checkpoint = False
-    n_games = 400
-    score_history = []
-    best_score = -1000
-    for i in range(n_games):
-        obs = envs.reset()
-        done = False
-        reset = False
-        score = 0
-        while not (done or reset):
-            observation = deepcopy(obs)
-            act = agent.choose_action(observation[0])
-            new_state, _, reward, reset, info, done = envs.step(act)
-            agent.remember(observation[0], act, reward, new_state, int(done))
-            agent.learn()
-            score += reward
-            obs = deepcopy(new_state)
-            #env.render()
-        score_history.append(score.cpu().detach().numpy())
-        avg_score = np.mean(score_history[-100:])
-
-
-        if score > best_score:
-            print(".........Saving model...........")
-            best_score = deepcopy(score)
-            agent.save_models()
-            # best_score = avg_score
-
-        print(f'episode {i} score {score} avg score {avg_score}')
-
-    if not load_checkpoint:
-        figure_file = 'tmp/ddpg/drone.png'
-        x = [i+1 for i in range(n_games)]
-        plot_learning_curve(x, score_history, figure_file)
-    plt.plot(score_history)
-    plt.show()
+    agent.load_models()
+    play(args, agent, env, env_cfg)    
